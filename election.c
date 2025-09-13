@@ -73,6 +73,29 @@ void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candi
         }
     }
 }
+/*void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candidates[], 
+                 int eliminated_candidate, int total_votes, int total_candidate) {
+    
+    for (int i = 0; i < total_candidate; i++) {
+        if (active_candidates[i]) {
+            vote_count[i] = 0;
+        }
+    }
+    
+    // Đếm lại phiếu cho tất cả các phiếu bầu
+    for (int v = 0; v < total_votes; v++) {
+        // Tìm ứng viên có thứ tự ưu tiên cao nhất trong phiếu này mà chưa bị loại
+        for (int preference = 1; preference <= total_candidate; preference++) {
+            for (int candidate = 0; candidate < total_candidate; candidate++) {
+                if (votes[v][candidate] == preference && active_candidates[candidate]) {
+                    vote_count[candidate]++;
+                    goto next_v; // Chuyển sang phiếu tiếp theo
+                }
+            }
+        }
+        next_v:;
+    }
+}*/
 
 int stage2(int votes[][MAX_CANDIDATE], char candidate[][20], int total_candidate, int total_votes) {
     int vote_count[MAX_CANDIDATE] = {0};
