@@ -5,10 +5,10 @@
 #define MAX_VOTE 999
 
 int check_winner(int vote_count[], int total_votes, int active_candidates[], int total_candidate) {
-    double half_votes = total_votes / 2.0;
+    int half_votes = total_votes / 2;
     
     for (int i = 0; i < total_candidate; i++) {
-        if (active_candidates[i] && vote_count[i] >= half_votes) {
+        if (active_candidates[i] && vote_count[i] > half_votes) {
             return i; 
         }
     }
@@ -30,7 +30,7 @@ int find_candidate_to_eliminate(int vote_count[], int active_candidates[], int t
 }
 
 void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candidates[], 
-                 int eliminated_candidate, int total_votes, int total_candidate) {
+                    int eliminated_candidate, int total_votes, int total_candidate) {
     
     for (int ballot = 0; ballot < total_votes; ballot++) {
         
