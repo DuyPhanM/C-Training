@@ -4,6 +4,7 @@
 #define MAX_CANDIDATE 20
 #define MAX_VOTE 999
 
+// Các hàm hỗ trợ giống như trong stage2
 int check_winner(int vote_count[], int total_votes, int active_candidates[], int total_candidate) {
     int half_votes = total_votes / 2;
     
@@ -30,7 +31,7 @@ int find_candidate_to_eliminate(int vote_count[], int active_candidates[], int t
 }
 
 void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candidates[], 
-                    int eliminated_candidate, int total_votes, int total_candidate) {
+                 int eliminated_candidate, int total_votes, int total_candidate) {
     
     for (int ballot = 0; ballot < total_votes; ballot++) {
         
@@ -73,31 +74,59 @@ void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candi
         }
     }
 }
-/* Kém tối ưu hơn O(v*c^2), đếm lại phiếu bầu
-void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candidates[], 
-                 int eliminated_candidate, int total_votes, int total_candidate) {
+
+int stage2(int votes[][MAX_CANDIDATE], char candidate[][20], int total_candidate, int total_votes) {
+    int vote_count[MAX_CANDIDATE] = {0};
+    int active_candidates[MAX_CANDIDATE];
     
+    // Khởi tạo các ứng viên còn hoạt động
     for (int i = 0; i < total_candidate; i++) {
-        if (active_candidates[i]) {
-            vote_count[i] = 0;
-        }
+        active_candidates[i] = 1;
     }
     
-    // Đếm lại phiếu cho tất cả các phiếu bầu
     for (int v = 0; v < total_votes; v++) {
-        // Tìm ứng viên có thứ tự ưu tiên cao nhất trong phiếu này mà chưa bị loại
-        for (int preference = 1; preference <= total_candidate; preference++) {
-            for (int candidate = 0; candidate < total_candidate; candidate++) {
-                if (votes[v][candidate] == preference && active_candidates[candidate]) {
-                    vote_count[candidate]++;
-                    goto next_v; // Chuyển sang phiếu tiếp theo
-                }
+        for (int c = 0; c < total_candidate; c++) {
+            if (votes[v][c] == 1) {
+                vote_count[c]++;
+                break;
             }
         }
-        next_v:;
     }
-}*/
+    
+    int round = 1;
+    while (1) {
+        printf("round %d:\n", round);
+        
+        for (int i = 0; i < total_candidate; i++) {
+            if (active_candidates[i]) {
+                double vote_ratio = 100.0*vote_count[i]/total_votes;
+                printf("    %-20s:   %d votes, %5.1lf%%\n", candidate[i], vote_count[i], vote_ratio);
+            }
+        }
+        
+        // Kiểm tra người thắng cử
+        int winner = check_winner(vote_count, total_votes, active_candidates, total_candidate);
+        if (winner != -1) {
+            printf("%s is declared elected\n", candidate[winner]);
+            return winner;
+        }
+        
+        // Tìm ứng viên có số phiếu thấp nhất để loại bỏ
+        int eliminated = find_candidate_to_eliminate(vote_count, active_candidates, total_candidate);
+        
+        printf("%s is eliminated\n", candidate[eliminated]);
+        
+        // Phân phối lại phiếu
+        redistribute(votes, vote_count, active_candidates, eliminated, total_votes, total_candidate);
 
+        // Loại bỏ ứng viên
+        active_candidates[eliminated] = 0;
+        
+        round++;
+    }
+}
+
+// Insertion sort để sắp xếp các ứng viên
 void sort_active_candidates(int sorted_indices[], int active_candidates[], int total_candidate, 
                            int vote_count[], char candidate[][20]) {
     int count = 0;
@@ -136,57 +165,6 @@ void sort_active_candidates(int sorted_indices[], int active_candidates[], int t
     }
 }
 
-int stage2(int votes[][MAX_CANDIDATE], char candidate[][20], int total_candidate, int total_votes) {
-    int vote_count[MAX_CANDIDATE] = {0};
-    int active_candidates[MAX_CANDIDATE];
-    
-    // Khởi tạo các ứng viên còn hoạt động
-    for (int i = 0; i < total_candidate; i++) {
-        active_candidates[i] = 1;
-    }
-    
-    for (int v = 0; v < total_votes; v++) {
-        for (int c = 0; c < total_candidate; c++) {
-            if (votes[v][c] == 1) {
-                vote_count[c]++;
-                break;
-            }
-        }
-    }
-    
-    int round = 1;
-    while (1) {
-        printf("round %d:\n", round);
-        
-        for (int i = 0; i < total_candidate; i++) {
-            if (active_candidates[i]) {
-                double vote_ratio = 100.0*vote_count[i]/total_candidate;
-                printf("    %-20s:   %d votes, %5.1lf%%\n", candidate[i], vote_count[i], vote_ratio);
-            }
-        }
-        
-        // Kiểm tra người thắng cử
-        int winner = check_winner(vote_count, total_votes, active_candidates, total_candidate);
-        if (winner != -1) {
-            printf("%s is declared elected\n", candidate[winner]);
-            return winner;
-        }
-        
-        // Tìm ứng viên có số phiếu thấp nhất để loại bỏ
-        int eliminated = find_candidate_to_eliminate(vote_count, active_candidates, total_candidate);
-        
-        printf("%s is eliminated\n", candidate[eliminated]);
-        
-        // Phân phối lại phiếu
-        redistribute(votes, vote_count, active_candidates, eliminated, total_votes, total_candidate);
-
-        // Loại bỏ ứng viên
-        active_candidates[eliminated] = 0;
-        
-        round++;
-    }
-}
-
 int stage3(int votes[][MAX_CANDIDATE], char candidate[][20], int total_candidate, int total_votes) {
     int vote_count[MAX_CANDIDATE] = {0};
     int active_candidates[MAX_CANDIDATE];
@@ -214,13 +192,19 @@ int stage3(int votes[][MAX_CANDIDATE], char candidate[][20], int total_candidate
         int sorted_indices[MAX_CANDIDATE];
         sort_active_candidates(sorted_indices, active_candidates, total_candidate, vote_count, candidate);
         
-        // In kết quả theo thứ tự đã sắp xếp
+        // Đếm số ứng viên còn hoạt động
+        int active_count = 0;
         for (int i = 0; i < total_candidate; i++) {
-            if (active_candidates[sorted_indices[i]]) {
-                int idx = sorted_indices[i];
-                double vote_ratio = 100.0 * vote_count[idx] / total_votes;
-                printf("    %-20s:   %d votes, %5.1lf%%\n", candidate[idx], vote_count[idx], vote_ratio);
+            if (active_candidates[i]) {
+                active_count++;
             }
+        }
+        
+        // In kết quả theo thứ tự đã sắp xếp (chỉ in những candidate còn active)
+        for (int i = 0; i < active_count; i++) {
+            int idx = sorted_indices[i];
+            double vote_ratio = 100.0 * vote_count[idx] / total_votes;
+            printf("    %-20s:   %d votes, %5.1lf%%\n", candidate[idx], vote_count[idx], vote_ratio);
         }
         
         // Kiểm tra người thắng cử
@@ -257,7 +241,7 @@ int main(int argc, char *argv[]) {
     };
     int total_votes = 4;
     
-    int winner = stage2(votes, candidate, total_candidate, total_votes);
+    printf("=== STAGE 3 (Sorted by votes desc, then alphabetically) ===\n");
     int winner = stage3(votes, candidate, total_candidate, total_votes);
     
     return 0;
