@@ -34,7 +34,7 @@ void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candi
     
     for (int ballot = 0; ballot < total_votes; ballot++) {
         
-        // Tìm lựa chọn hiện tại của phiếu (trong số người còn lại)
+        // Tìm lựa chọn hiện tại của từng phiếu (trong số người còn lại)
         int current_choice = -1;
         int best_preference = total_candidate + 1;
         
@@ -69,11 +69,12 @@ void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candi
             }
             
             // Khôi phục active (để xử lý phiếu tiếp theo)
-            active_candidates[eliminated_candidate] = 0; // Giữ nguyên = 0
+            active_candidates[eliminated_candidate] = 1;
         }
     }
 }
-/*void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candidates[], 
+/* Kém tối ưu hơn O(v*c^2), đếm lại phiếu bầu
+void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candidates[], 
                  int eliminated_candidate, int total_votes, int total_candidate) {
     
     for (int i = 0; i < total_candidate; i++) {
