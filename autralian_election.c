@@ -98,6 +98,44 @@ void redistribute(int votes[][MAX_CANDIDATE], int vote_count[], int active_candi
     }
 }*/
 
+void sort_active_candidates(int sorted_indices[], int active_candidates[], int total_candidate, 
+                           int vote_count[], char candidate[][20]) {
+    int count = 0;
+    
+    // Lấy danh sách các ứng viên còn hoạt động
+    for (int i = 0; i < total_candidate; i++) {
+        if (active_candidates[i]) {
+            sorted_indices[count++] = i;
+        }
+    }
+    
+    // Insertion sort: sắp xếp theo số phiếu giảm dần, nếu bằng thì theo alphabet
+    for (int i = 1; i < count; i++) {
+        int key = sorted_indices[i];
+        int j = i - 1;
+        
+        // Di chuyển các phần tử lớn hơn key về phía sau
+        while (j >= 0) {
+            int current_idx = sorted_indices[j];
+            
+            // Kiểm tra điều kiện sắp xếp:
+            // 1. Số phiếu của current_idx < số phiếu của key (cần di chuyển vì muốn giảm dần)
+            // 2. Hoặc số phiếu bằng nhau nhưng tên current_idx > tên key (cần di chuyển vì muốn alphabet)
+            if (vote_count[current_idx] < vote_count[key] || 
+                (vote_count[current_idx] == vote_count[key] && 
+                 strcmp(candidate[current_idx], candidate[key]) > 0)) {
+                sorted_indices[j + 1] = sorted_indices[j];
+                j--;
+            } else {
+                break; // Đã tìm được vị trí phù hợp
+            }
+        }
+        
+        // Chèn key vào vị trí đúng
+        sorted_indices[j + 1] = key;
+    }
+}
+
 int stage2(int votes[][MAX_CANDIDATE], char candidate[][20], int total_candidate, int total_votes) {
     int vote_count[MAX_CANDIDATE] = {0};
     int active_candidates[MAX_CANDIDATE];
